@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @unique @default(cuid())
+  username String @unique
+  password String
+  avatarId String?
+  role     Role
+  spaces   Space[] // One user can create multiple spaces
+  avatar   Avatar? @relation(fields: [avatarId], references: [id]) // Optional relation to an Avatar
+}
+
+model Space {
+  id        String @id @unique @default(cuid())
+  name      String
+  width     Int
+  height    Int
+  thumbnail String?
+  creatorId String // Foreign key to User (creator of the space)
+  creator   User @relation(fields: [creatorId], references: [id]) // Links to the User model
+  elements  SpaceElement[] // A space can have multiple elements
+}
+
+model SpaceElement {
+  id        String @id @unique @default(cuid())
+  elementId String
+  spaceId   String
+  x         Int
+  y         Int
+  space     Space @relation(fields: [spaceId], references: [id]) // Links to the Space model
+  element   Element @relation(fields: [elementId], references: [id]) // Links to the Element model
+}
+
+model Element {
+  id          String @id @unique @default(cuid())
+  width       Int
+  height      Int
+  static      Boolean
+  imageUrl    String
+  spaces      SpaceElement[] // An element can be placed in multiple spaces
+  mapElements MapElement[]   // An element can be placed in multiple maps
+}
+
+model Map {
+  id          String @id @unique @default(cuid())
+  width       Int // Changed from String to Int
+  height      Int // Changed from String to Int
+  name        String
+  thumbnail   String
+  mapElements MapElement[] // A map can have multiple elements
+}
+
+model MapElement {
+  id        String @id @unique @default(cuid())
+  mapId     String
+  elementId String
+  x         Int?
+  y         Int?
+  map       Map @relation(fields: [mapId], references: [id]) // Links to the Map model
+  element   Element @relation(fields: [elementId], references: [id]) // Links to the Element model and assign multiple postions and then it place in mapElement 
+}
+
+model Avatar {
+  id       String @id @unique @default(cuid())
+  imageUrl String?
+  name     String?
+  users    User[]
+}
+
+enum Role {
+  Admin
+  User
+}
